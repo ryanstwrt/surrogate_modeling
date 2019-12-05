@@ -1,12 +1,17 @@
 import train_surrogate_models as tm
 import numpy as np
 import sklearn
-from sklearn.preprocessing import StandardScaler
+from sklearn import linear_model
+import pandas as pd
 import warnings
 warnings.filterwarnings("ignore")
 
 def test_surrogate_model_init():
     sm = tm.Surrogate_Models()
+    assert sm.database == None
+    assert sm.ind_var == []
+    assert sm.obj_var == []
+
     assert sm.var_test == None
     assert sm.var_train == None
     assert sm.obj_test == None
@@ -19,23 +24,37 @@ def test_surrogate_model_init():
     assert sm.scaled_var_test  == None
     assert sm.scaled_obj_train == None
     assert sm.scaled_obj_test  == None
-    assert sm.models == {}
+    for m in ['lr', 'mars', 'gpr', 'ann', 'rf']:
+        assert m in sm.models.keys()
 
 def test_train_test_split():
     sm = tm.Surrogate_Models()
-    variables = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
-    objectives = [[0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75]]
-    sm._split_database(variables, objectives)
+    sm.ind_var = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
+    sm.obj_var = [[0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75]]
+    sm._split_database()
     assert len(sm.var_test) == 2
     assert len(sm.var_train) == 4
     assert len(sm.obj_test) == 2
     assert len(sm.obj_train) == 4
 
+def test_update_database():
+    sm = tm.Surrogate_Models()
+    variables = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
+    objectives = [[0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75]]
+    sm.update_database(variables, objectives)
+    assert sm.ind_var == [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
+    assert sm.obj_var ==[[0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75]]
+    variables = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
+    objectives = [[0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75]]
+    sm.update_database(variables, objectives)
+    assert sm.ind_var == [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
+    assert sm.obj_var == [[0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75]]
+
 def test_scale_datasets():
     sm = tm.Surrogate_Models()
-    variables = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
-    objectives = [[0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75]]
-    sm._split_database(variables, objectives)
+    sm.ind_var = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
+    sm.obj_var = [[0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75]]
+    sm._split_database()
     sm._scale_data_sets()
     assert sm.var_train_scaler.mean_.all() == np.array([[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]).all()
     assert sm.var_train_scaler.var_.all() == np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).all()
@@ -49,15 +68,13 @@ def test_scale_datasets():
 model = tm.Surrogate_Models()
 variables = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]]
 objectives = [[0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75], [0.25, 0.5, 0.75, 1.25, 1.5, 1.75]]
-model._split_database(variables, objectives)
-model._scale_data_sets()
+model.update_database(variables, objectives)
 model._initialize_models()
 
 
 def test_initialize_models():
     models = model.models
     assert 'lr' in models
-    assert 'mars' in models
     assert 'pr' in models
     assert 'mars' in models
     assert 'gpr' in models
@@ -101,3 +118,17 @@ def test_ann_model():
     assert rf_model['model'] != None
     assert rf_model['fit'] != None
     assert rf_model['score'] == 1.0
+
+def test_add_model():
+    ridge = linear_model.Ridge()
+    model.add_model('ridge', ridge)
+    assert 'ridge' in model.models
+
+def test_set_added_model():
+    ridge = linear_model.Ridge()
+    model.add_model('ridge', ridge)
+    model.set_model('ridge')
+    ridge_model = model.models['ridge']
+    assert ridge_model['model'] != None
+    assert ridge_model['fit'] != None
+    assert ridge_model['score'] == 1.0
