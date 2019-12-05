@@ -2,7 +2,7 @@ import h5py
 import pandas as pd
 import numpy as np
 
-def reshape_database(database, reactor_vars, obj_vars):
+def reshape_database(database, design_vars, obj_vars):
   """This function will take in an H5 database, convert it to a pandas database, and return a list of coordiantes and objectives"""
   db = h5py.File(database, 'r+')
   # Create a dict of reactor name : reactor attributes to fill the data frame
@@ -35,27 +35,18 @@ def reshape_database(database, reactor_vars, obj_vars):
   reactorData['pu_content'] = pu_content_dict.values()
   reactorData['pu_content'] = reactorData['pu_content'].apply(lambda x : [x])
 
-
   # Create a a coordinate system via the variables for interpolator
   var_array = []
-  mars_coordinates = []
-  for var in reactor_vars.keys():
+  for var in design_vars:
     var_list = []
-    var_list_mars = []
     for data_point in reactorData[var]:
       var_list.append(data_point[0])
     var_array.append(var_list)
   coordinates = list(zip(*var_array))
 
-  #print(coordinates)
-  for x in coordinates:
-      mars_coordinates.append(list(x))
-  mars_coordinates = np.array(mars_coordinates)
   # Create a list of objectives to solve for, and a list of known values
   # for the objectives
-  obj_dict = {}
-  interp = {}
-  obj_list_tot = []
+  obj_array = []
   for obj in obj_vars:
     obj_list = []
     for data_point in reactorData[obj]:
@@ -63,12 +54,7 @@ def reshape_database(database, reactor_vars, obj_vars):
         obj_list.append(data_point[0])
       except IndexError:
         obj_list.append(data_point)
-    obj_list_tot.append(obj_list)
-    obj_dict[obj] = obj_list
+    obj_array.append(obj_list)
+  objectives = list(zip(*obj_array))
 
-  mars_objectives = []
-  for x in list(zip(*obj_list_tot)):
-    mars_objectives.append(list(x))
-  mars_objectives = np.array(mars_objectives)
-
-  return mars_coordinates, mars_objectives
+  return coordinates, objectives
