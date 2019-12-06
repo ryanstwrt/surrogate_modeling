@@ -92,4 +92,5 @@ class Surrogate_Models(object):
   def update_all_models(self):
     """update all models with new data"""
     for k in self.models.keys():
-        self.set_model(k)
+        if k != 'pr':
+            self.set_model(k)

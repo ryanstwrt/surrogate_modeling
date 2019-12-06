@@ -158,7 +158,23 @@ def test_update_model():
     model.update_database([[ 15, 150,  65,],[ 13, 550,  90,],], [[205,  38,  47,],[145,  32,  77,]])
     model.update_model('lr')
     linear2_model = model.models['lr']
-    assert linear2_model['model'] == linear_model['model']
-    assert linear2_model['fit'] != None
-    print(linear2_model['score'])
     assert linear2_model['score'] == -0.5475314374931772
+
+model2 = tm.Surrogate_Models()
+variables, objectives = datasets.load_linnerud(return_X_y=True)
+model2.random = 57757
+model2.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
+model2._initialize_models()
+
+def test_update_all_models():
+    model_list = ['lr', 'mars', 'gpr', 'ann', 'rf']
+    model_scores = [0.354605820068773, -2.220446049250313e-16, -0.5233899743763291, 0.4008662058935275, 0.1770111582876811, ]
+    model_scores2 = [-0.5475314374931772, -0.24481636763032544, -24.31874022650345, -0.19403272657576642, 0.033954767107108486, ]
+    for model_type in model_list:
+        model2.set_model(model_type)
+    for model_type, model_score in zip(model_list, model_scores):
+        assert model2.models[model_type]['score'] == model_score
+    model2.update_database([[ 15, 150,  65,],[ 13, 550,  90,],], [[205,  38,  47,],[145,  32,  77,]])
+    model2.update_all_models()
+    for model_type, model_score in zip(model_list, model_scores2):
+        assert model2.models[model_type]['score'] == model_score
