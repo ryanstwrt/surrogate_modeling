@@ -7,6 +7,7 @@ from sklearn import neural_network
 from sklearn import ensemble
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
+import numpy as np
 
 class Surrogate_Models(object):
   """Class to hold the surrogate models"""
@@ -14,6 +15,8 @@ class Surrogate_Models(object):
     self.database = None
     self.ind_var = []
     self.obj_var = []
+
+    self.random = None
 
     self.var_train = None
     self.var_test = None
@@ -35,24 +38,21 @@ class Surrogate_Models(object):
       self.models['pr']   = None
       self.models['mars'] = {'model': Earth()}
       self.models['gpr']  = {'model': gaussian_process.GaussianProcessRegressor()}
-      self.models['ann']  = {'model': neural_network.MLPRegressor()}
-      self.models['rf']   = {'model': ensemble.RandomForestRegressor()}
+      self.models['ann']  = {'model': neural_network.MLPRegressor(random_state=self.random)}
+      self.models['rf']   = {'model': ensemble.RandomForestRegressor(random_state=self.random)}
 
   def update_database(self, variables, objectives):
-    """Update the database with new data"""
+    """Update the database with new data
+    Note: Make sure our ind and obj are staying together in the list"""
     for var, obj in zip(variables, objectives):
         self.ind_var.append(var)
         self.obj_var.append(obj)
-    print(self.ind_var)
-    print(self.obj_var)
     self._split_database()
     self._scale_data_sets()
 
   def _split_database(self):
     """Split the database into seperate training and test sets"""
-    print(self.ind_var)
-    print(self.obj_var)
-    self.var_train, self.var_test, self.obj_train, self.obj_test = train_test_split(self.ind_var, self.obj_var)
+    self.var_train, self.var_test, self.obj_train, self.obj_test = train_test_split(self.ind_var, self.obj_var, random_state=self.random)
 
   def _scale_data_sets(self):
     """Scale the training and test databases to have a mean of 0
@@ -76,19 +76,20 @@ class Surrogate_Models(object):
     model = self.models[model_type]['model']
     fit = model.fit(self.scaled_var_train,self.scaled_obj_train)
     score = model.score(self.scaled_var_test,self.scaled_obj_test)
-    self.models[model_type].update({'fit': fit, 'score': score})
+    self.models[model_type].update({'model': model, 'fit': fit, 'score': score})
 
   def add_model(self, model_type, model):
-      self.models[model_type] = {'model': model}
+      """Add a new model which is not pre-defined"""
+      try:
+          self.models[model_type] = {'model': model}
+      except:
+          print("Error: Model of type `{}' does not contain the correct format for function set_model. Please check sklearn for proper formatting.".format(model_type))
 
-  def update_model(self, model):
+  def update_model(self, model_type):
     """update a single model with new data"""
-    self._split_database()
-    self._scale_data_sets()
+    self.set_model(model_type)
 
   def update_all_models(self):
     """update all models with new data"""
-    self._split_database()
-    self._scale_data_sets()
-    for k,v in self.models.items():
-        pass
+    for k in self.models.keys():
+        self.set_model(k)
