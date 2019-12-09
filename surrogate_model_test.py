@@ -1,4 +1,5 @@
 import train_surrogate_models as tm
+from sklearn.gaussian_process import kernels
 import numpy as np
 import sklearn
 from sklearn import linear_model
@@ -27,8 +28,24 @@ def test_surrogate_model_init():
     assert sm.scaled_var_test  == None
     assert sm.scaled_obj_train == None
     assert sm.scaled_obj_test  == None
+
+    given_hp = {'lr': None,
+                'pr': {'degree': (2,3,4,5,6,7)},
+                'mars': {'endspan_alpha':(0.01, 0.05, 0.1, 0.25),
+                         'minspan_alpha':(0.01, 0.05, 0.1, 0.25)},
+                'gpr': {'kernel': (kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic()),
+                        'optmizer': ('fmin_l_bfgs_b')},
+                'ann': {'hidden_layer_size': (50,100,150),
+                        'activation': ('tanh', 'relu', 'logistic'),
+                        'solver': ('lbfgs', 'sgd', 'adam'),
+                        'alpha': (0.00001, 0.0001, 0.001)},
+                'rf': {'n_estimators': (10, 50, 100, 200)}}
+
     for m in ['lr', 'mars', 'gpr', 'ann', 'rf']:
         assert m in sm.models.keys()
+    for m in ['lr', 'mars', 'gpr', 'ann', 'rf']:
+        assert m in sm.hyper_parameters.keys()
+        assert sm.hyper_parameters[m] == given_hp[m]
 
 def test_train_test_split():
     sm = tm.Surrogate_Models()
@@ -93,7 +110,7 @@ model._initialize_models()
 def test_initialize_models():
     models = model.models
     assert 'lr' in models
-    assert 'pr' in models
+    #assert 'pr' in models
     assert 'mars' in models
     assert 'gpr' in models
     assert 'ann' in models
@@ -151,6 +168,29 @@ def test_set_added_model():
     assert ridge_model['fit'] != None
     assert ridge_model['score'] == 0.36028890615023224
 
+def test_add_hyper_parameter_update():
+    assert model.hyper_parameters['ann'] == {'hidden_layer_size': (50,100,150),
+            'activation': ('tanh', 'relu', 'logistic'),
+            'solver': ('lbfgs', 'sgd', 'adam'),
+            'alpha': (0.00001, 0.0001, 0.001)}
+    model.add_hyper_parameter('ann', {'hidden_layer_size': (25,75,125)})
+    assert model.hyper_parameters['ann'] == {'hidden_layer_size': (25,75,125),
+            'activation': ('tanh', 'relu', 'logistic'),
+            'solver': ('lbfgs', 'sgd', 'adam'),
+            'alpha': (0.00001, 0.0001, 0.001)}
+
+def test_add_hyper_parameter_new():
+    assert model.hyper_parameters['ann'] == {'hidden_layer_size': (25,75,125),
+            'activation': ('tanh', 'relu', 'logistic'),
+            'solver': ('lbfgs', 'sgd', 'adam'),
+            'alpha': (0.00001, 0.0001, 0.001)}
+    model.add_hyper_parameter('ann', {'learning_rate': ('constant', 'adaptive')})
+    assert model.hyper_parameters['ann'] == {'hidden_layer_size': (25,75,125),
+            'activation': ('tanh', 'relu', 'logistic'),
+            'solver': ('lbfgs', 'sgd', 'adam'),
+            'alpha': (0.00001, 0.0001, 0.001),
+            'learning_rate': ('constant', 'adaptive')}
+
 def test_update_model():
     model.set_model('lr')
     linear_model = model.models['lr']
@@ -178,3 +218,32 @@ def test_update_all_models():
     model2.update_all_models()
     for model_type, model_score in zip(model_list, model_scores2):
         assert model2.models[model_type]['score'] == model_score
+
+def test_optimize_model():
+    sm = tm.Surrogate_Models()
+    variables, objectives = datasets.load_linnerud(return_X_y=True)
+    sm.random = 57757
+    sm.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
+    sm._initialize_models()
+
+    sm.set_model('ann')
+    ann_model = sm.models['ann']
+    print(ann_model['fit'])
+    assert ann_model['score'] == 0.4008662058935275
+    hyper_parameters = {'solver': ('lbfgs', 'sgd')}
+    sm.optimize_model('ann', hyper_parameters)
+    optimized_ann_model = sm.models['ann']
+    assert optimized_ann_model['score'] != 0.4008662058935275
+    assert optimized_ann_model['hyper_parameters'] == hyper_parameters
+
+def test_return_best_model():
+    sm = tm.Surrogate_Models()
+    variables, objectives = datasets.load_linnerud(return_X_y=True)
+    sm.random = 57757
+    sm.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
+    sm._initialize_models()
+    model_list = ['lr', 'mars', 'gpr', 'ann', 'rf']
+    for model_type in model_list:
+        sm.set_model(model_type)
+    best_model = sm.return_best_model()
+    assert best_model == sm.models['ann']
