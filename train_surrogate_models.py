@@ -7,7 +7,7 @@ from sklearn.gaussian_process import kernels
 from sklearn import neural_network
 from sklearn import ensemble
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
 from sklearn import model_selection
 import numpy as np
 
@@ -77,7 +77,7 @@ class Surrogate_Models(object):
 
   def _split_database(self):
     """Split the database into seperate training and test sets"""
-    self.var_train, self.var_test, self.obj_train, self.obj_test = train_test_split(self.ind_var, self.obj_var, random_state=self.random)
+    self.var_train, self.var_test, self.obj_train, self.obj_test = model_selection.train_test_split(self.ind_var, self.obj_var, random_state=self.random)
 
   def add_model(self, model_type, model):
       """Add a new model which is not pre-defined"""
@@ -92,6 +92,24 @@ class Surrogate_Models(object):
       for hp in hyper_parameter:
            hyper_parameters[hp] = hyper_parameter[hp]
 
+  def clear_surrogate_model(self):
+      """Clear the the surrogate model of all values, but leave model types and hyper-parameters"""
+      self.database = None
+      self.ind_var = []
+      self.obj_var = []
+      self.var_train = None
+      self.var_test = None
+      self.obj_test = None
+      self.obj_train = None
+      self.var_train_scaler = None
+      self.var_test_scaler = None
+      self.obj_train_scaler = None
+      self.obj_test_scaler = None
+      self.scaled_var_train = None
+      self.scaled_var_test  = None
+      self.scaled_obj_train = None
+      self.scaled_obj_test  = None
+
   def optimize_model(self, model_type, hyper_parameters):
     """Update the model by optimizing it's hyper_parameters"""
     self.set_model(model_type, hyper_parameters)
@@ -104,8 +122,16 @@ class Surrogate_Models(object):
         score = self.models[k]['score']
         if  score > best_score:
             best_score = score
-            best_model = self.models[k]
+            best_model = k
     return best_model
+
+  def predict(self, model_type, var):
+      """Return the value for a prediction using the trained set"""
+      scaled_var = self.var_train_scaler.transform(var)
+      model = self.models[model_type]['fit']
+      predictor = model.predict(scaled_var)
+      inv_pred = self.obj_train_scaler.inverse_transform(predictor)
+      return inv_pred
 
   def set_model(self, model_type, hyper_parameters=None):
     """Create a surrogate model"""

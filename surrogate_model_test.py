@@ -43,7 +43,6 @@ def test_surrogate_model_init():
 
     for m in ['lr', 'mars', 'gpr', 'ann', 'rf']:
         assert m in sm.models.keys()
-    for m in ['lr', 'mars', 'gpr', 'ann', 'rf']:
         assert m in sm.hyper_parameters.keys()
         assert sm.hyper_parameters[m] == given_hp[m]
 
@@ -84,6 +83,33 @@ def test_update_database():
     assert len(sm.var_test) == 6
     assert len(sm.obj_test) == 6
 
+def test_clear_database():
+    sm = tm.Surrogate_Models()
+    variables, objectives = datasets.load_linnerud(return_X_y=True)
+    sm.random = 57757
+    sm.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
+    ind_var_given = [[ 11, 230,  80,], [  6,  70,  31,], [  2, 110,  43,], [ 14, 215, 105,], [ 15, 225,  73,], [  4,  60,  25,], [ 12, 105,  37,], [ 12, 101, 101,], [ 13, 210, 115,], [ 13, 155,  58,], [  2, 110,  60,], [ 15, 200,  40,], [  6, 125,  40,], [  8, 101,  38,], [ 17, 120,  38,]]
+    obj_var_given = [[157,  32,  52,], [193,  36,  46,], [138,  33,  68,], [154,  34,  64,], [156,  33,  54,], [176,  37,  54,], [162,  35,  62,], [193,  38,  58,], [166,  33,  52,], [189,  35,  46,], [189,  37,  52,], [176,  31,  74,], [167,  34,  60,], [211,  38,  56,], [169,  34,  50,]]
+    np.testing.assert_array_equal(sm.var_train, ind_var_given)
+    np.testing.assert_array_equal(sm.obj_train, obj_var_given)
+    sm.clear_surrogate_model()
+
+    assert sm.database == None
+    assert sm.ind_var == []
+    assert sm.obj_var == []
+    assert sm.random == 57757
+    assert sm.var_test == None
+    assert sm.var_train == None
+    assert sm.obj_test == None
+    assert sm.obj_train == None
+    assert sm.var_test_scaler == None
+    assert sm.var_train_scaler == None
+    assert sm.obj_test_scaler == None
+    assert sm.obj_train_scaler == None
+    assert sm.scaled_var_train == None
+    assert sm.scaled_var_test  == None
+    assert sm.scaled_obj_train == None
+    assert sm.scaled_obj_test  == None
 
 def test_scale_datasets():
     sm = tm.Surrogate_Models()
@@ -105,7 +131,6 @@ variables, objectives = datasets.load_linnerud(return_X_y=True)
 model.random = 57757
 model.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
 model._initialize_models()
-
 
 def test_initialize_models():
     models = model.models
@@ -246,4 +271,14 @@ def test_return_best_model():
     for model_type in model_list:
         sm.set_model(model_type)
     best_model = sm.return_best_model()
-    assert best_model == sm.models['ann']
+    assert best_model == 'ann'
+
+def test_predict():
+    sm = tm.Surrogate_Models()
+    variables, objectives = datasets.load_linnerud(return_X_y=True)
+    sm.random = 57757
+    sm.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
+    sm._initialize_models()
+    sm.set_model('ann')
+    pred = sm.predict('ann', [[11, 230, 80]])
+    assert np.ndarray.tolist(pred) == [[157.52822584119048, 32.358577510266706, 55.610311777515484]]
