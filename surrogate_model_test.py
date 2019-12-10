@@ -31,15 +31,13 @@ def test_surrogate_model_init():
 
     given_hp = {'lr': None,
                 'pr': {'degree': (2,3,4,5,6,7)},
-                'mars': {'endspan_alpha':(0.01, 0.05, 0.1, 0.25),
-                         'minspan_alpha':(0.01, 0.05, 0.1, 0.25)},
-                'gpr': {'kernel': (kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic()),
-                        'optmizer': ('fmin_l_bfgs_b')},
-                'ann': {'hidden_layer_size': (50,100,150),
+                'mars': {'endspan_alpha':(0.01, 0.025, 0.05),},
+                'gpr': {'kernel': (kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic())},
+                'ann': {'hidden_layer_sizes': (100,200,300),
                         'activation': ('tanh', 'relu', 'logistic'),
-                        'solver': ('lbfgs', 'sgd', 'adam'),
+                        'solver': ('lbfgs'),
                         'alpha': (0.00001, 0.0001, 0.001)},
-                'rf': {'n_estimators': (10, 50, 100, 200)}}
+                'rf': {'n_estimators': (100, 200, 300)}}
 
     for m in ['lr', 'mars', 'gpr', 'ann', 'rf']:
         assert m in sm.models.keys()
@@ -170,7 +168,7 @@ def test_ann_model():
     ann_model = model.models['ann']
     assert ann_model['model'] != None
     assert ann_model['fit'] != None
-    assert ann_model['score'] == 0.4008662058935275
+    assert ann_model['score'] == -0.8755529631738193
 
 def test_rf_model():
     model.set_model('rf')
@@ -194,25 +192,25 @@ def test_set_added_model():
     assert ridge_model['score'] == 0.36028890615023224
 
 def test_add_hyper_parameter_update():
-    assert model.hyper_parameters['ann'] == {'hidden_layer_size': (50,100,150),
+    assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (100,200,300),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs', 'sgd', 'adam'),
+            'solver': ('lbfgs'),
             'alpha': (0.00001, 0.0001, 0.001)}
-    model.add_hyper_parameter('ann', {'hidden_layer_size': (25,75,125)})
-    assert model.hyper_parameters['ann'] == {'hidden_layer_size': (25,75,125),
+    model.add_hyper_parameter('ann', {'hidden_layer_sizes': (25,75,125)})
+    assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs', 'sgd', 'adam'),
+            'solver': ('lbfgs'),
             'alpha': (0.00001, 0.0001, 0.001)}
 
 def test_add_hyper_parameter_new():
-    assert model.hyper_parameters['ann'] == {'hidden_layer_size': (25,75,125),
+    assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs', 'sgd', 'adam'),
+            'solver': ('lbfgs'),
             'alpha': (0.00001, 0.0001, 0.001)}
     model.add_hyper_parameter('ann', {'learning_rate': ('constant', 'adaptive')})
-    assert model.hyper_parameters['ann'] == {'hidden_layer_size': (25,75,125),
+    assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs', 'sgd', 'adam'),
+            'solver': ('lbfgs'),
             'alpha': (0.00001, 0.0001, 0.001),
             'learning_rate': ('constant', 'adaptive')}
 
@@ -233,8 +231,8 @@ model2._initialize_models()
 
 def test_update_all_models():
     model_list = ['lr', 'mars', 'gpr', 'ann', 'rf']
-    model_scores = [0.354605820068773, -2.220446049250313e-16, -0.5233899743763291, 0.4008662058935275, 0.1770111582876811, ]
-    model_scores2 = [-0.5475314374931772, -0.24481636763032544, -24.31874022650345, -0.19403272657576642, 0.033954767107108486, ]
+    model_scores = [0.354605820068773, -2.220446049250313e-16, -0.5233899743763291, -0.8755529631738193, 0.1770111582876811, ]
+    model_scores2 = [-0.5475314374931772, -0.24481636763032544, -24.31874022650345, -5.1253178627525235, 0.033954767107108486, ]
     for model_type in model_list:
         model2.set_model(model_type)
     for model_type, model_score in zip(model_list, model_scores):
@@ -254,12 +252,12 @@ def test_optimize_model():
     sm.set_model('ann')
     ann_model = sm.models['ann']
     print(ann_model['fit'])
-    assert ann_model['score'] == 0.4008662058935275
+    assert ann_model['score'] == -0.8755529631738193
     hyper_parameters = {'solver': ('lbfgs', 'sgd')}
     sm.optimize_model('ann', hyper_parameters)
     optimized_ann_model = sm.models['ann']
-    assert optimized_ann_model['score'] != 0.4008662058935275
-    assert optimized_ann_model['hyper_parameters'] == hyper_parameters
+    assert optimized_ann_model['score'] != 0.354605820068773
+    assert optimized_ann_model['hyper_parameters'] == {'solver': 'sgd'}
 
 def test_return_best_model():
     sm = tm.Surrogate_Models()
@@ -271,7 +269,7 @@ def test_return_best_model():
     for model_type in model_list:
         sm.set_model(model_type)
     best_model = sm.return_best_model()
-    assert best_model == 'ann'
+    assert best_model == 'lr'
 
 def test_predict():
     sm = tm.Surrogate_Models()
@@ -281,4 +279,4 @@ def test_predict():
     sm._initialize_models()
     sm.set_model('ann')
     pred = sm.predict('ann', [[11, 230, 80]])
-    assert np.ndarray.tolist(pred) == [[157.52822584119048, 32.358577510266706, 55.610311777515484]]
+    assert np.ndarray.tolist(pred) == [[156.99735516448985, 32.00049230917206, 51.99881931855418]]
