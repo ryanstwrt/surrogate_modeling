@@ -251,7 +251,6 @@ def test_optimize_model():
 
     sm.set_model('ann')
     ann_model = sm.models['ann']
-    print(ann_model['fit'])
     assert ann_model['score'] == -0.8755529631738193
     hyper_parameters = {'solver': ('lbfgs', 'sgd')}
     sm.optimize_model('ann', hyper_parameters)

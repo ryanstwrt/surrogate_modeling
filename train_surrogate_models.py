@@ -54,7 +54,7 @@ class Surrogate_Models(object):
       #self.models['pr']   = None
       self.models['mars'] = {'model': Earth()}
       self.models['gpr']  = {'model': gaussian_process.GaussianProcessRegressor(optimizer='fmin_l_bfgs_b')}
-      self.models['ann']  = {'model': neural_network.MLPRegressor(random_state=self.random,solver='lbfgs')}
+      self.models['ann']  = {'model': neural_network.MLPRegressor(random_state=self.random,solver='lbfgs',activation='logistic')}
       self.models['rf']   = {'model': ensemble.RandomForestRegressor(random_state=self.random)}
 
   def _scale_data_sets(self):
@@ -151,12 +151,12 @@ class Surrogate_Models(object):
       plt.xlabel("{}".format(hyper_parameter))
       plt.ylabel("Score")
       lw = 2
-      plt.semilogx(hp_range, tr_m, label="Training score",
+      plt.plot(hp_range, tr_m, label="Training score",
                 color="darkorange", lw=lw)
       plt.fill_between(hp_range, tr_m - tr_s,
                  tr_m + tr_s, alpha=0.2,
                  color="darkorange", lw=lw)
-      plt.semilogx(hp_range, ts_m, label="Cross-validation score",
+      plt.plot(hp_range, ts_m, label="Cross-validation score",
              color="navy", lw=lw)
       plt.fill_between(hp_range, ts_m - ts_s,
                  ts_m + ts_s, alpha=0.2,
