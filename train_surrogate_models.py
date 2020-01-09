@@ -41,7 +41,7 @@ class Surrogate_Models(object):
 
   def _initialize_hyper_parameters(self):
       self.hyper_parameters['lr'] = None
-      self.hyper_parameters['pr'] = {'degree': (2,3,4,5,6,7)}
+      self.hyper_parameters['pr'] = {'poly__degree': (2,3,4,5,6,7)}
       self.hyper_parameters['mars'] = {'endspan_alpha': (0.01, 0.025, 0.05)}
       self.hyper_parameters['gpr'] = {'kernel':( kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic())}
       self.hyper_parameters['ann'] = {'hidden_layer_sizes': (100,200,300),
@@ -52,7 +52,7 @@ class Surrogate_Models(object):
 
   def _initialize_models(self):
       self.models['lr']   = {'model': linear_model.LinearRegression()}
-      self.models['pr']   = {'model': Pipeline([('poly', PolynomialFeatures(degree=2)),
+      self.models['pr']   = {'model': Pipeline([('poly', PolynomialFeatures()),
                                                 ('linear', linear_model.LinearRegression(fit_intercept=False))])}
       self.models['mars'] = {'model': Earth()}
       self.models['gpr']  = {'model': gaussian_process.GaussianProcessRegressor(optimizer='fmin_l_bfgs_b')}
@@ -85,7 +85,7 @@ class Surrogate_Models(object):
       try:
           self.models[model_type] = {'model': model}
       except:
-          print("Error: Model of type `{}' does not contain the correct format for function set_model. Please check sklearn for proper formatting.".format(model_type))
+          print("Error: Model of type '{}' does not contain the correct format for function set_model. Please check sklearn for proper formatting.".format(model_type))
 
   def add_hyper_parameter(self, model_type, hyper_parameter):
       """Add a new hyper parameter to examine in the CV search space"""

@@ -4,6 +4,8 @@ import warnings
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn import model_selection
+
 warnings.filterwarnings("ignore")
 
 var_tot, obj_tot = dbr.reshape_database(r'sfr_db_test.h5', ['height', 'smear', 'pu_content'], ['keff', 'void_coeff', 'doppler_coeff'])
@@ -18,7 +20,7 @@ for model in models:
         sm.update_database(var_tot, obj_tot)
         sm.update_model(model)
         sm.random = 7
-        #sm.plot_validation_curve(model, 'degree', np.linspace(1,7,7,dtype=np.int16))
+        sm.plot_validation_curve(model, 'poly__degree', np.linspace(1,7,7,dtype=np.int16))
         #sm.plot_validation_curve(model, 'hidden_layer_sizes', np.linspace(1,25,25,dtype=np.int16))
         #sm.plot_validation_curve(model, 'alpha', np.linspace(0.00001,0.1,500))
         #sm.plot_validation_curve(model, 'n_estimators', np.linspace(500,1000,500,dtype=np.int16))

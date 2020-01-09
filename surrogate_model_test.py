@@ -30,7 +30,7 @@ def test_surrogate_model_init():
     assert sm.scaled_obj_test  == None
 
     given_hp = {'lr': None,
-                'pr': {'degree': (2,3,4,5,6,7)},
+                'pr': {'poly__degree': (2,3,4,5,6,7)},
                 'mars': {'endspan_alpha':(0.01, 0.025, 0.05),},
                 'gpr': {'kernel': (kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic())},
                 'ann': {'hidden_layer_sizes': (100,200,300),
@@ -217,6 +217,11 @@ def test_add_hyper_parameter_new():
             'alpha': (0.00001, 0.0001, 0.001),
             'learning_rate': ('constant', 'adaptive')}
 
+def test_add_hyper_parameter_poly():
+    assert model.hyper_parameters['pr'] == {'poly__degree': (2,3,4,5,6,7)}
+    model.add_hyper_parameter('pr', {'poly__degree': (3,5,8)})
+    assert model.hyper_parameters['pr'] == {'poly__degree': (3,5,8)}
+
 def test_update_model():
     model.set_model('lr')
     linear_model = model.models['lr']
@@ -233,9 +238,9 @@ def test_update_all_models():
     model2.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
     model2._initialize_models()
 
-    model_list = ['lr', 'mars', 'gpr', 'ann', 'rf']
-    model_scores = [0.354605820068773, -2.220446049250313e-16, -0.5233899743763291, -0.9969486553689931, 0.1770111582876811, ]
-    model_scores2 = [-0.5475314374931772, -0.24481636763032544, -24.31874022650345, -1.008837609834964, 0.033954767107108486, ]
+    model_list = ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']
+    model_scores = [0.354605820068773, -0.2225911024507033, -2.220446049250313e-16, -0.5233899743763291, -0.9969486553689931, 0.1770111582876811, ]
+    model_scores2 = [-0.5475314374931772, -0.2225911024507033, -0.24481636763032544, -24.31874022650345, -1.008837609834964, 0.033954767107108486, ]
     for model_type in model_list:
         model2.set_model(model_type)
     for model_type, model_score in zip(model_list, model_scores):
