@@ -168,7 +168,7 @@ def test_ann_model():
     ann_model = model.models['ann']
     assert ann_model['model'] != None
     assert ann_model['fit'] != None
-    assert ann_model['score'] == -0.8755529631738193
+    assert ann_model['score'] == -0.9969486553689931
 
 def test_rf_model():
     model.set_model('rf')
@@ -223,16 +223,16 @@ def test_update_model():
     linear2_model = model.models['lr']
     assert linear2_model['score'] == -0.5475314374931772
 
-model2 = tm.Surrogate_Models()
-variables, objectives = datasets.load_linnerud(return_X_y=True)
-model2.random = 57757
-model2.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
-model2._initialize_models()
-
 def test_update_all_models():
+    model2 = tm.Surrogate_Models()
+    variables, objectives = datasets.load_linnerud(return_X_y=True)
+    model2.random = 57757
+    model2.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
+    model2._initialize_models()
+
     model_list = ['lr', 'mars', 'gpr', 'ann', 'rf']
-    model_scores = [0.354605820068773, -2.220446049250313e-16, -0.5233899743763291, -0.8755529631738193, 0.1770111582876811, ]
-    model_scores2 = [-0.5475314374931772, -0.24481636763032544, -24.31874022650345, -5.1253178627525235, 0.033954767107108486, ]
+    model_scores = [0.354605820068773, -2.220446049250313e-16, -0.5233899743763291, -0.9969486553689931, 0.1770111582876811, ]
+    model_scores2 = [-0.5475314374931772, -0.24481636763032544, -24.31874022650345, -1.008837609834964, 0.033954767107108486, ]
     for model_type in model_list:
         model2.set_model(model_type)
     for model_type, model_score in zip(model_list, model_scores):
@@ -251,7 +251,7 @@ def test_optimize_model():
 
     sm.set_model('ann')
     ann_model = sm.models['ann']
-    assert ann_model['score'] == -0.8755529631738193
+    assert ann_model['score'] == -0.9969486553689931
     hyper_parameters = {'solver': ('lbfgs', 'sgd')}
     sm.optimize_model('ann', hyper_parameters)
     optimized_ann_model = sm.models['ann']
@@ -278,4 +278,4 @@ def test_predict():
     sm._initialize_models()
     sm.set_model('ann')
     pred = sm.predict('ann', [[11, 230, 80]])
-    assert np.ndarray.tolist(pred) == [[156.99735516448985, 32.00049230917206, 51.99881931855418]]
+    assert np.ndarray.tolist(pred) == [[158.72102049090896, 31.863975706233898, 53.17570651554791]]
