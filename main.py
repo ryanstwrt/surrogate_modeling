@@ -10,6 +10,9 @@ warnings.filterwarnings("ignore")
 
 var_tot, obj_tot = dbr.reshape_database(r'sfr_db_test.h5', ['height', 'smear', 'pu_content'], ['keff', 'void_coeff', 'doppler_coeff'])
 
+print(var_tot)
+#var_tot = pd.DataFrame(var_tot)
+print(var_tot)
 sm = tm.Surrogate_Models()
 data_col = ['r-squared', 'mean', 'std', 'index', 'hyper-parameters', 'cv_results']
 models = ['lr', 'mars', 'gpr', 'ann', 'rf']
@@ -20,7 +23,8 @@ for model in models:
         sm.update_database(var_tot, obj_tot)
         sm.update_model(model)
         sm.random = 7
-        sm.plot_validation_curve(model, 'poly__degree', np.linspace(1,7,7,dtype=np.int16))
+        print(sm.predict('pr', [(60,60,0.6)]))
+        #sm.plot_validation_curve(model, 'poly__degree', np.linspace(1,7,7,dtype=np.int16))
         #sm.plot_validation_curve(model, 'hidden_layer_sizes', np.linspace(1,25,25,dtype=np.int16))
         #sm.plot_validation_curve(model, 'alpha', np.linspace(0.00001,0.1,500))
         #sm.plot_validation_curve(model, 'n_estimators', np.linspace(500,1000,500,dtype=np.int16))
