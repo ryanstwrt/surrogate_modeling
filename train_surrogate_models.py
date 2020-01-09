@@ -9,6 +9,7 @@ from sklearn import ensemble
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn import model_selection
+from sklearn.pipeline import Pipeline
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -51,7 +52,8 @@ class Surrogate_Models(object):
 
   def _initialize_models(self):
       self.models['lr']   = {'model': linear_model.LinearRegression()}
-      #self.models['pr']   = None
+      self.models['pr']   = {'model': Pipeline([('poly', PolynomialFeatures(degree=2)),
+                                                ('linear', linear_model.LinearRegression(fit_intercept=False))])}
       self.models['mars'] = {'model': Earth()}
       self.models['gpr']  = {'model': gaussian_process.GaussianProcessRegressor(optimizer='fmin_l_bfgs_b')}
       self.models['ann']  = {'model': neural_network.MLPRegressor(random_state=self.random,solver='lbfgs',activation='logistic')}

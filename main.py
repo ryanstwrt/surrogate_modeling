@@ -11,15 +11,16 @@ var_tot, obj_tot = dbr.reshape_database(r'sfr_db_test.h5', ['height', 'smear', '
 sm = tm.Surrogate_Models()
 data_col = ['r-squared', 'mean', 'std', 'index', 'hyper-parameters', 'cv_results']
 models = ['lr', 'mars', 'gpr', 'ann', 'rf']
-models = ['ann']
+models = ['pr']
 for model in models:
     sm_db = pd.DataFrame(columns = data_col)
     for i in range(1):
         sm.update_database(var_tot, obj_tot)
         sm.update_model(model)
         sm.random = 7
-        #sm.plot_validation_curve(model, 'hidden_layer_sizes', np.linspace(40,540,500,dtype=np.int16))
-        sm.plot_validation_curve(model, 'alpha', np.linspace(0.00001,0.1,500))
+        #sm.plot_validation_curve(model, 'degree', np.linspace(1,7,7,dtype=np.int16))
+        #sm.plot_validation_curve(model, 'hidden_layer_sizes', np.linspace(1,25,25,dtype=np.int16))
+        #sm.plot_validation_curve(model, 'alpha', np.linspace(0.00001,0.1,500))
         #sm.plot_validation_curve(model, 'n_estimators', np.linspace(500,1000,500,dtype=np.int16))
         #sm.plot_validation_curve(model, 'thresh', np.linspace(1E-5,1E-2,500))
         #sm.plot_validation_curve(model, 'min_samples_leaf', np.linspace(1,25,25,dtype=np.int16))
@@ -41,4 +42,4 @@ for model in models:
 #sm_db.plot(kind='line', x='index', y='mean')
 #sm_db.plot(kind='line', x='index', y='std')
 #sm_db.plot(kind='line', x='index', y='r-squared')
-plt.show()
+#plt.show()

@@ -38,8 +38,7 @@ def test_surrogate_model_init():
                         'solver': ('lbfgs'),
                         'alpha': (0.00001, 0.0001, 0.001)},
                 'rf': {'n_estimators': (100, 200, 300)}}
-
-    for m in ['lr', 'mars', 'gpr', 'ann', 'rf']:
+    for m in ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']:
         assert m in sm.models.keys()
         assert m in sm.hyper_parameters.keys()
         assert sm.hyper_parameters[m] == given_hp[m]
@@ -133,7 +132,7 @@ model._initialize_models()
 def test_initialize_models():
     models = model.models
     assert 'lr' in models
-    #assert 'pr' in models
+    assert 'pr' in models
     assert 'mars' in models
     assert 'gpr' in models
     assert 'ann' in models
@@ -147,7 +146,11 @@ def test_linear_model():
     assert linear_model['score'] == 0.354605820068773
 
 def test_poly_model():
-    pass
+    model.set_model('pr')
+    poly_model = model.models['pr']
+    assert poly_model['model'] != None
+    assert poly_model['fit'] != None
+    assert poly_model['score'] == -0.2225911024507033
 
 def test_mars_models():
     model.set_model('mars')
@@ -264,7 +267,7 @@ def test_return_best_model():
     sm.random = 57757
     sm.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
     sm._initialize_models()
-    model_list = ['lr', 'mars', 'gpr', 'ann', 'rf']
+    model_list = ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']
     for model_type in model_list:
         sm.set_model(model_type)
     best_model = sm.return_best_model()
