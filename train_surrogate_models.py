@@ -46,7 +46,7 @@ class Surrogate_Models(object):
       self.hyper_parameters['gpr'] = {'kernel':( kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic())}
       self.hyper_parameters['ann'] = {'hidden_layer_sizes': (100,200,300),
                                       'activation': ('tanh', 'relu', 'logistic'),
-                                      'solver': ('lbfgs'),
+                                      'solver': ('lbfgs', 'sgd'),
                                       'alpha': (0.00001, 0.0001, 0.001)}
       self.hyper_parameters['rf'] = {'n_estimators': (100, 200, 300)}
 
