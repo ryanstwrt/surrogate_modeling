@@ -33,7 +33,7 @@ def test_surrogate_model_init():
                 'pr': {'poly__degree': (2,3,4,5,6,7)},
                 'mars': {'endspan_alpha':(0.01, 0.025, 0.05),},
                 'gpr': {'kernel': (kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic())},
-                'ann': {'hidden_layer_sizes': (100,200,300),
+                'ann': {'hidden_layer_sizes': (2,3,4,6,8,10,50),
                         'activation': ('tanh', 'relu', 'logistic'),
                         'solver': ('lbfgs', 'sgd'),
                         'alpha': (0.00001, 0.0001, 0.001)},
@@ -195,25 +195,25 @@ def test_set_added_model():
     assert ridge_model['score'] == 0.3602889061502321
 
 def test_add_hyper_parameter_update():
-    assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (100,200,300),
+    assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (2,3,4,6,8,10,50),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs','sgd'),
+            'solver': ('lbfgs', 'sgd'),
             'alpha': (0.00001, 0.0001, 0.001)}
     model.add_hyper_parameter('ann', {'hidden_layer_sizes': (25,75,125)})
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs','sgd'),
+            'solver': ('lbfgs', 'sgd'),
             'alpha': (0.00001, 0.0001, 0.001)}
 
 def test_add_hyper_parameter_new():
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs','sgd'),
+            'solver': ('lbfgs', 'sgd'),
             'alpha': (0.00001, 0.0001, 0.001)}
     model.add_hyper_parameter('ann', {'learning_rate': ('constant', 'adaptive')})
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs','sgd'),
+            'solver': ('lbfgs', 'sgd'),
             'alpha': (0.00001, 0.0001, 0.001),
             'learning_rate': ('constant', 'adaptive')}
 

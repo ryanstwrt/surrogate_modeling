@@ -44,7 +44,7 @@ class Surrogate_Models(object):
       self.hyper_parameters['pr'] = {'poly__degree': (2,3,4,5,6,7)}
       self.hyper_parameters['mars'] = {'endspan_alpha': (0.01, 0.025, 0.05)}
       self.hyper_parameters['gpr'] = {'kernel':( kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic())}
-      self.hyper_parameters['ann'] = {'hidden_layer_sizes': (100,200,300),
+      self.hyper_parameters['ann'] = {'hidden_layer_sizes': (2,3,4,6,8,10,50),
                                       'activation': ('tanh', 'relu', 'logistic'),
                                       'solver': ('lbfgs', 'sgd'),
                                       'alpha': (0.00001, 0.0001, 0.001)}
@@ -159,7 +159,6 @@ class Surrogate_Models(object):
       plt.fill_between(hp_range, ts_m - ts_s, ts_m + ts_s, alpha=0.2, color="navy", lw=lw)
       plt.legend(loc="best")
       plt.show()
-
 
   def set_model(self, model_type, hyper_parameters=None):
     """Create a surrogate model"""
