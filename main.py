@@ -16,14 +16,14 @@ print(var_tot)
 sm = tm.Surrogate_Models()
 data_col = ['r-squared', 'mean', 'std', 'index', 'hyper-parameters', 'cv_results']
 models = ['lr', 'mars', 'gpr', 'ann', 'rf']
-models = ['pr']
+#models = ['pr']
 for model in models:
     sm_db = pd.DataFrame(columns = data_col)
     for i in range(1):
         sm.update_database(var_tot, obj_tot)
         sm.update_model(model)
         sm.random = 7
-        print(sm.predict('pr', [(60,60,0.6)]))
+        #print(sm.predict('pr', [(60,60,0.6)]))
         #sm.plot_validation_curve(model, 'poly__degree', np.linspace(1,7,7,dtype=np.int16))
         #sm.plot_validation_curve(model, 'hidden_layer_sizes', np.linspace(1,25,25,dtype=np.int16))
         #sm.plot_validation_curve(model, 'alpha', np.linspace(0.00001,0.1,500))
@@ -35,6 +35,18 @@ for model in models:
         score = sm.models[model]['score']
         hp = sm.models[model]['hyper_parameters']
         cv = sm.models[model]['cv_results']
+        sm.optimize_model(model)
+        score = sm.models[model]['score']
+        hp = sm.models[model]['hyper_parameters']
+        cv = sm.models[model]['cv_results']
+        print('Mode: {}, Score: {}'.format(model,score))
+        print('Design 1:')
+        print(sm.predict(model, [(61.37, 51.58, 0.7340)]))
+        print('Design 2:')
+        print(sm.predict(model, [(59.72, 50.01, 0.8694)]))
+        print('Design 3:')
+        print(sm.predict(model, [(71.06, 55.77, 0.3536)]))
+        print()
         append_dict = pd.DataFrame([[score,
                                     sm_db['r-squared'].mean(axis = 0),
                                     sm_db['r-squared'].std(axis = 0),
