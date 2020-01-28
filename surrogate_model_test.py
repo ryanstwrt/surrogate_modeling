@@ -143,35 +143,35 @@ def test_linear_model():
     linear_model = model.models['lr']
     assert linear_model['model'] != None
     assert linear_model['fit'] != None
-    assert linear_model['score'] == 0.354605820068773
+    assert linear_model['score'] == 0.3546058200687729
 
 def test_poly_model():
     model.set_model('pr')
     poly_model = model.models['pr']
     assert poly_model['model'] != None
     assert poly_model['fit'] != None
-    assert poly_model['score'] == -0.2225911024507033
+    assert poly_model['score'] == -0.22259110245070493
 
 def test_mars_models():
     model.set_model('mars')
     mars_model = model.models['mars']
     assert mars_model['model'] != None
     assert mars_model['fit'] != None
-    assert mars_model['score'] == -2.220446049250313e-16
+    assert mars_model['score'] == 0.35460582006877317
 
 def test_grp_model():
     model.set_model('gpr')
     gpr_model = model.models['gpr']
     assert gpr_model['model'] != None
     assert gpr_model['fit'] != None
-    assert gpr_model['score'] == -0.5233899743763291
+    assert gpr_model['score'] == -0.5233899743763276
 
 def test_ann_model():
     model.set_model('ann')
     ann_model = model.models['ann']
     assert ann_model['model'] != None
     assert ann_model['fit'] != None
-    assert ann_model['score'] == -0.9969486553689931
+    assert ann_model['score'] == -0.8124181759959282
 
 def test_rf_model():
     model.set_model('rf')
@@ -192,7 +192,7 @@ def test_set_added_model():
     ridge_model = model.models['ridge']
     assert ridge_model['model'] != None
     assert ridge_model['fit'] != None
-    assert ridge_model['score'] == 0.36028890615023224
+    assert ridge_model['score'] == 0.3602889061502321
 
 def test_add_hyper_parameter_update():
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (100,200,300),
@@ -225,7 +225,7 @@ def test_add_hyper_parameter_poly():
 def test_update_model():
     model.set_model('lr')
     linear_model = model.models['lr']
-    assert linear_model['score'] == 0.354605820068773
+    assert linear_model['score'] == 0.3546058200687729
     model.update_database([[ 15, 150,  65,],[ 13, 550,  90,],], [[205,  38,  47,],[145,  32,  77,]])
     model.update_model('lr')
     linear2_model = model.models['lr']
@@ -239,16 +239,17 @@ def test_update_all_models():
     model2._initialize_models()
 
     model_list = ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']
-    model_scores = [0.354605820068773, -0.2225911024507033, -2.220446049250313e-16, -0.5233899743763291, -0.9969486553689931, 0.1770111582876811, ]
-    model_scores2 = [-0.5475314374931772, -0.2225911024507033, -0.24481636763032544, -24.31874022650345, -1.008837609834964, 0.033954767107108486, ]
+    model_scores = [0.3546058200687729, -0.2225911024507033, 0.35460582006877317, -0.5233899743763291, -0.8124181759959282, 0.1770111582876811, ]
+    model_scores2 = [-0.5475314374931772, -0.2225911024507033, -0.5475314374931768, -24.31874022650345, -1.0503029979397898, 0.033954767107108486, ]
     for model_type in model_list:
         model2.set_model(model_type)
     for model_type, model_score in zip(model_list, model_scores):
-        assert model2.models[model_type]['score'] == model_score
+        assert np.allclose(model2.models[model_type]['score'], model_score, rtol=1e-05)
+        
     model2.update_database([[ 15, 150,  65,],[ 13, 550,  90,],], [[205,  38,  47,],[145,  32,  77,]])
     model2.update_all_models()
     for model_type, model_score in zip(model_list, model_scores2):
-        assert model2.models[model_type]['score'] == model_score
+        assert np.allclose(model2.models[model_type]['score'], model_score, rtol=1e-5)
 
 def test_optimize_model():
     sm = tm.Surrogate_Models()
@@ -259,7 +260,7 @@ def test_optimize_model():
 
     sm.set_model('ann')
     ann_model = sm.models['ann']
-    assert ann_model['score'] == -0.9969486553689931
+    assert ann_model['score'] == -0.8124181759959282
     hyper_parameters = {'solver': ('lbfgs', 'sgd')}
     sm.optimize_model('ann', hyper_parameters)
     optimized_ann_model = sm.models['ann']
@@ -275,8 +276,9 @@ def test_return_best_model():
     model_list = ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']
     for model_type in model_list:
         sm.set_model(model_type)
+        print(model_type, sm.models[model_type]['score'])
     best_model = sm.return_best_model()
-    assert best_model == 'lr'
+    assert best_model == 'mars'
 
 def test_predict():
     sm = tm.Surrogate_Models()
@@ -286,4 +288,4 @@ def test_predict():
     sm._initialize_models()
     sm.set_model('ann')
     pred = sm.predict('ann', [[11, 230, 80]])
-    assert np.ndarray.tolist(pred) == [[158.72102049090896, 31.863975706233898, 53.17570651554791]]
+    assert np.ndarray.tolist(pred) == [[158.64501384843928, 31.922021142788957, 52.673575073769754]]
