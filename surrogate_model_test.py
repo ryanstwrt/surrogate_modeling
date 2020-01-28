@@ -35,7 +35,7 @@ def test_surrogate_model_init():
                 'gpr': {'kernel': (kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic())},
                 'ann': {'hidden_layer_sizes': (100,200,300),
                         'activation': ('tanh', 'relu', 'logistic'),
-                        'solver': ('lbfgs'),
+                        'solver': ('lbfgs', 'sgd'),
                         'alpha': (0.00001, 0.0001, 0.001)},
                 'rf': {'n_estimators': (100, 200, 300)}}
     for m in ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']:
@@ -197,23 +197,23 @@ def test_set_added_model():
 def test_add_hyper_parameter_update():
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (100,200,300),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs'),
+            'solver': ('lbfgs','sgd'),
             'alpha': (0.00001, 0.0001, 0.001)}
     model.add_hyper_parameter('ann', {'hidden_layer_sizes': (25,75,125)})
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs'),
+            'solver': ('lbfgs','sgd'),
             'alpha': (0.00001, 0.0001, 0.001)}
 
 def test_add_hyper_parameter_new():
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs'),
+            'solver': ('lbfgs','sgd'),
             'alpha': (0.00001, 0.0001, 0.001)}
     model.add_hyper_parameter('ann', {'learning_rate': ('constant', 'adaptive')})
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs'),
+            'solver': ('lbfgs','sgd'),
             'alpha': (0.00001, 0.0001, 0.001),
             'learning_rate': ('constant', 'adaptive')}
 
