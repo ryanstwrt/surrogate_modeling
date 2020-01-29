@@ -41,13 +41,13 @@ class Surrogate_Models(object):
 
   def _initialize_hyper_parameters(self):
       self.hyper_parameters['lr'] = None
-      self.hyper_parameters['pr'] = {'poly__degree': (2,3,4,5,6,7)}
-      self.hyper_parameters['mars'] = {'endspan_alpha': (0.01, 0.025, 0.05)}
+      self.hyper_parameters['pr'] = {'poly__degree': (2,3,4)}
+      self.hyper_parameters['mars'] = {'endspan_alpha': (0.01, 0.05, 0.1),
+                                       'penalty': (6,7,8,9,10)}
       self.hyper_parameters['gpr'] = {'kernel':( kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic())}
-      self.hyper_parameters['ann'] = {'hidden_layer_sizes': (2,3,4,6,8,10,50),
+      self.hyper_parameters['ann'] = {'hidden_layer_sizes': (2,4,8,10,15,20,50),
                                       'activation': ('tanh', 'relu', 'logistic'),
-                                      'solver': ('lbfgs', 'sgd'),
-                                      'alpha': (0.00001, 0.0001, 0.001)}
+                                      'solver': ('lbfgs', 'sgd'),}
       self.hyper_parameters['rf'] = {'n_estimators': (100, 200, 300)}
 
   def _initialize_models(self):

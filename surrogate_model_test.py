@@ -30,13 +30,13 @@ def test_surrogate_model_init():
     assert sm.scaled_obj_test  == None
 
     given_hp = {'lr': None,
-                'pr': {'poly__degree': (2,3,4,5,6,7)},
-                'mars': {'endspan_alpha':(0.01, 0.025, 0.05),},
+                'pr': {'poly__degree': (2,3,4)},
+                'mars': {'endspan_alpha':(0.01, 0.05, 0.1),
+                         'penalty': (6,7,8,9,10)},
                 'gpr': {'kernel': (kernels.RBF(), kernels.Matern(), kernels.RationalQuadratic())},
-                'ann': {'hidden_layer_sizes': (2,3,4,6,8,10,50),
+                'ann': {'hidden_layer_sizes': (2,4,8,10,15,20,50),
                         'activation': ('tanh', 'relu', 'logistic'),
-                        'solver': ('lbfgs', 'sgd'),
-                        'alpha': (0.00001, 0.0001, 0.001)},
+                        'solver': ('lbfgs', 'sgd')},
                 'rf': {'n_estimators': (100, 200, 300)}}
     for m in ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']:
         assert m in sm.models.keys()
@@ -201,30 +201,26 @@ def test_set_added_model():
     assert ridge_model['score'] == 0.3602889061502321
 
 def test_add_hyper_parameter_update():
-    assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (2,3,4,6,8,10,50),
+    assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (2,4,8,10,15,20,50),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs', 'sgd'),
-            'alpha': (0.00001, 0.0001, 0.001)}
+            'solver': ('lbfgs', 'sgd')}
     model.add_hyper_parameter('ann', {'hidden_layer_sizes': (25,75,125)})
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs', 'sgd'),
-            'alpha': (0.00001, 0.0001, 0.001)}
+            'solver': ('lbfgs', 'sgd')}
 
 def test_add_hyper_parameter_new():
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
-            'solver': ('lbfgs', 'sgd'),
-            'alpha': (0.00001, 0.0001, 0.001)}
+            'solver': ('lbfgs', 'sgd')}
     model.add_hyper_parameter('ann', {'learning_rate': ('constant', 'adaptive')})
     assert model.hyper_parameters['ann'] == {'hidden_layer_sizes': (25,75,125),
             'activation': ('tanh', 'relu', 'logistic'),
             'solver': ('lbfgs', 'sgd'),
-            'alpha': (0.00001, 0.0001, 0.001),
             'learning_rate': ('constant', 'adaptive')}
 
 def test_add_hyper_parameter_poly():
-    assert model.hyper_parameters['pr'] == {'poly__degree': (2,3,4,5,6,7)}
+    assert model.hyper_parameters['pr'] == {'poly__degree': (2,3,4)}
     model.add_hyper_parameter('pr', {'poly__degree': (3,5,8)})
     assert model.hyper_parameters['pr'] == {'poly__degree': (3,5,8)}
 
@@ -256,6 +252,8 @@ def test_update_all_models():
     model2.update_all_models()
     for model_type, model_score in zip(model_list, model_scores2):
         assert np.allclose(model2.models[model_type]['score'], model_score, rtol=1e-5)
+
+# TODO: Add tests for optimizing all regression techniques        
 
 def test_optimize_model():
     sm = tm.Surrogate_Models()
