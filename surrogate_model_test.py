@@ -144,6 +144,7 @@ def test_linear_model():
     assert linear_model['model'] != None
     assert linear_model['fit'] != None
     assert linear_model['score'] == 0.3546058200687729
+    assert linear_model['mse_score'] == 0.6453941799312272
 
 def test_poly_model():
     model.set_model('pr')
@@ -151,6 +152,7 @@ def test_poly_model():
     assert poly_model['model'] != None
     assert poly_model['fit'] != None
     assert poly_model['score'] == -0.22259110245070493
+    assert poly_model['mse_score'] == 1.2225911024507052
 
 def test_mars_models():
     model.set_model('mars')
@@ -158,6 +160,7 @@ def test_mars_models():
     assert mars_model['model'] != None
     assert mars_model['fit'] != None
     assert mars_model['score'] == 0.35460582006877317
+    assert mars_model['mse_score'] == 0.6453941799312267
 
 def test_grp_model():
     model.set_model('gpr')
@@ -165,6 +168,7 @@ def test_grp_model():
     assert gpr_model['model'] != None
     assert gpr_model['fit'] != None
     assert gpr_model['score'] == -0.5233899743763276
+    assert gpr_model['mse_score'] == 1.523389974376325
 
 def test_ann_model():
     model.set_model('ann')
@@ -172,6 +176,7 @@ def test_ann_model():
     assert ann_model['model'] != None
     assert ann_model['fit'] != None
     assert ann_model['score'] == -0.8124181759959282
+    assert ann_model['mse_score'] == 1.8124181759959297
 
 def test_rf_model():
     model.set_model('rf')
@@ -179,6 +184,7 @@ def test_rf_model():
     assert rf_model['model'] != None
     assert rf_model['fit'] != None
     assert rf_model['score'] == 0.1770111582876811
+    assert rf_model['mse_score'] == 0.822988841712319
 
 def test_add_model():
     ridge = linear_model.Ridge()
@@ -261,11 +267,13 @@ def test_optimize_model():
     sm.set_model('ann')
     ann_model = sm.models['ann']
     assert ann_model['score'] == -0.8124181759959282
-    hyper_parameters = {'solver': ('lbfgs', 'sgd')}
+    assert ann_model['mse_score'] == 1.8124181759959297
+    hyper_parameters = {'hidden_layer_sizes': (10,15,20,25)}
     sm.optimize_model('ann', hyper_parameters)
     optimized_ann_model = sm.models['ann']
-    assert optimized_ann_model['score'] != 0.354605820068773
-    assert optimized_ann_model['hyper_parameters'] == {'solver': 'sgd'}
+    assert optimized_ann_model['score'] == -2.2259234072187373
+    assert optimized_ann_model['mse_score'] == 3.225923407218738
+    assert optimized_ann_model['hyper_parameters'] == {'hidden_layer_sizes': 25}
 
 def test_return_best_model():
     sm = tm.Surrogate_Models()
@@ -289,3 +297,16 @@ def test_predict():
     sm.set_model('ann')
     pred = sm.predict('ann', [[11, 230, 80]])
     assert np.ndarray.tolist(pred) == [[158.64501384843928, 31.922021142788957, 52.673575073769754]]
+
+    
+def test_mse():
+    sm = tm.Surrogate_Models()
+    variables, objectives = datasets.load_linnerud(return_X_y=True)
+    sm.random = 57757
+    sm.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
+    sm._initialize_models()
+    model_list = ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']
+    mse_val = [0.6453941799312272, 1.2225911024507052, 0.6453941799312267, 1.523389974376325, 1.8124181759959297, 0.822988841712319]
+    for known_mse, model_type in zip(mse_val, model_list):
+        sm.set_model(model_type)
+        assert sm._get_mse(sm.models[model_type]['model']) == known_mse

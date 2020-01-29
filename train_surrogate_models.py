@@ -80,6 +80,14 @@ class Surrogate_Models(object):
     """Split the database into seperate training and test sets"""
     self.var_train, self.var_test, self.obj_train, self.obj_test = model_selection.train_test_split(self.ind_var, self.obj_var, random_state=self.random)
 
+  def _get_mse(self, model):
+    "Get the Mean Square Error using the test database"
+    from sklearn.metrics import mean_squared_error
+    predict = [model.predict([val])[0] for val in self.scaled_var_test]
+    known = self.scaled_obj_test
+    return mean_squared_error(known, predict)
+
+
   def add_model(self, model_type, model):
       """Add a new model which is not pre-defined"""
       try:
@@ -167,12 +175,14 @@ class Surrogate_Models(object):
     if hyper_parameters:
         hyper_model = model_selection.GridSearchCV(estimator=base_model, param_grid=hyper_parameters, refit=True, n_jobs=16)
         fit = hyper_model.fit(self.scaled_var_train,self.scaled_obj_train)
-        score = hyper_model.score(self.scaled_var_test,self.scaled_obj_test)
-        self.models[model_type].update({'fit': fit, 'score': score, 'hyper_parameters':hyper_model.best_params_, 'cv_results':hyper_model.cv_results_})
+        r2_score = hyper_model.score(self.scaled_var_test,self.scaled_obj_test)
+        mse_score = self._get_mse(hyper_model)
+        self.models[model_type].update({'fit': fit, 'score': r2_score, 'mse_score': mse_score, 'hyper_parameters':hyper_model.best_params_, 'cv_results':hyper_model.cv_results_})
     else:
         fit = base_model.fit(self.scaled_var_train,self.scaled_obj_train)
-        score = base_model.score(self.scaled_var_test,self.scaled_obj_test)
-        self.models[model_type].update({'fit': fit, 'score': score, 'hyper_parameters': None, 'cv_results': None})
+        r2_score = base_model.score(self.scaled_var_test,self.scaled_obj_test)
+        mse_score = self._get_mse(base_model)
+        self.models[model_type].update({'fit': fit, 'score': r2_score, 'mse_score': mse_score, 'hyper_parameters': None, 'cv_results': None})
 
   def update_all_models(self):
     """update all models with new data"""
