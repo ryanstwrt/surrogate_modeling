@@ -193,28 +193,23 @@ class Surrogate_Models(object):
         if k != 'pr':
             self.set_model(k)
 
-  def update_database(self, variables, objectives):
+  def update_database(self, variables, objectives, database=None):
     """Update the database with new data
     Note: Make sure our ind and obj are staying together in the list"""
-    for var, obj in zip(variables, objectives):
-        self.ind_var.append(var)
-        self.obj_var.append(obj)
-    self._split_database()
-    self._scale_data_sets()
     
-  def update_database_dict(self, database, ind_var_names, dep_var_names):
-    """
-    asdr
-    """
-    self.ind_var_names = ind_var_names
-    self.dep_var_names = dep_var_names
-    
-    for design in database.values():
-        self.ind_var.append([design['independent variables'][x] for x in ind_var_names])
-        self.obj_var.append([design['dependent variables'][x] for x in dep_var_names])
+    if database:
+        self.ind_var_names = variables
+        self.dep_var_names = objectives
+        for design in database.values():
+            print(design)
+            self.ind_var.append([design['independent variables'][x] for x in variables])
+            self.obj_var.append([design['dependent variables'][x] for x in objectives])
+    else:
+        for var, obj in zip(variables, objectives):
+            self.ind_var.append(var)
+            self.obj_var.append(obj)
     self._split_database()
-    self._scale_data_sets()    
-
+    self._scale_data_sets()  
 
   def predict(self, model_type, design, output='list'):
       """Return the value for a prediction using the trained set"""

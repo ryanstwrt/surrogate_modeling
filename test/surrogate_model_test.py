@@ -83,6 +83,35 @@ def test_update_database():
     assert len(sm.var_test) == 6
     assert len(sm.obj_test) == 6
 
+def test_update_database_dict():
+    sm = tm.Surrogate_Models()
+    variables, objectives = datasets.load_linnerud(return_X_y=True)
+    sm.random = 57757
+    test_dict = {}
+    
+    i = 0
+    for ind, obj in zip(variables, objectives):
+        test_dict['core {}'.format(i)] = {'independent variables': {}, 'dependent variables': {}}
+        test_dict['core {}'.format(i)]['independent variables'] = {'a': ind[0], 'b': ind[1], 'c': ind[2]}
+        test_dict['core {}'.format(i)]['dependent variables'] = {'d': obj[0], 'e': obj[1], 'f': obj[2]}
+        i +=1
+    
+    sm.update_database(['a','b','c'], ['d','e','f'], database=test_dict)
+    ind_var_given = [[ 11, 230,  80,], [  6,  70,  31,], [  2, 110,  43,], [ 14, 215, 105,], [ 15, 225,  73,], [  4,  60,  25,], [ 12, 105,  37,], [ 12, 101, 101,], [ 13, 210, 115,], [ 13, 155,  58,], [  2, 110,  60,], [ 15, 200,  40,], [  6, 125,  40,], [  8, 101,  38,], [ 17, 120,  38,]]
+    obj_var_given = [[157,  32,  52,], [193,  36,  46,], [138,  33,  68,], [154,  34,  64,], [156,  33,  54,], [176,  37,  54,], [162,  35,  62,], [193,  38,  58,], [166,  33,  52,], [189,  35,  46,], [189,  37,  52,], [176,  31,  74,], [167,  34,  60,], [211,  38,  56,], [169,  34,  50,]]
+    np.testing.assert_array_equal(sm.var_train, ind_var_given)
+    np.testing.assert_array_equal(sm.obj_train, obj_var_given)
+    assert len(sm.var_test) == 5
+    assert len(sm.obj_test) == 5
+
+    test_dict = {'core 100': {'independent variables': {'a':12,'b':250,'c':85}, 'dependent variables': {'d': 165,'e':33,'f': 57}},
+                 'core 101': {'independent variables': {'a':12,'b':250,'c':85}, 'dependent variables': {'d': 165,'e':33,'f': 57}}}
+    sm.update_database(['a','b','c'], ['d','e','f'], database=test_dict)
+    assert len(sm.var_train) == 16
+    assert len(sm.obj_train) == 16
+    assert len(sm.var_test) == 6
+    assert len(sm.obj_test) == 6
+    
 def test_clear_database():
     sm = tm.Surrogate_Models()
     variables, objectives = datasets.load_linnerud(return_X_y=True)
@@ -311,6 +340,26 @@ def test_predict():
     sm.set_model('ann')
     pred = sm.predict('ann', [[11, 230, 80]])
     assert np.ndarray.tolist(pred) == [[158.64501384843928, 31.922021142788957, 52.673575073769754]]
+    
+def test_predict_dict():
+    sm = tm.Surrogate_Models()
+    variables, objectives = datasets.load_linnerud(return_X_y=True)
+    sm.random = 57757
+    test_dict = {}
+    
+    i = 0
+    for ind, obj in zip(variables, objectives):
+        test_dict['core {}'.format(i)] = {'independent variables': {}, 'dependent variables': {}}
+        test_dict['core {}'.format(i)]['independent variables'] = {'a': ind[0], 'b': ind[1], 'c': ind[2]}
+        test_dict['core {}'.format(i)]['dependent variables'] = {'d': obj[0], 'e': obj[1], 'f': obj[2]}
+        i +=1
+    
+    sm.update_database(['a','b','c'], ['d','e','f'], database=test_dict)
+    sm._initialize_models()
+    sm.set_model('ann')
+    pred = sm.predict('ann', {'a':11, 'b':230, 'c':80}, output='dict')
+    assert pred == {'d':158.64501384843928, 'e':31.922021142788957, 'f':52.673575073769754}
+
 
 def test_mse():
     sm = tm.Surrogate_Models()
