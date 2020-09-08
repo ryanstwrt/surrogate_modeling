@@ -36,14 +36,12 @@ def test_surrogate_model_init():
 
     given_hp = {'lr': None,
                 'pr': {'poly__degree': (1,5)},
-                'mars': {'endspan_alpha':(0.001, 0.1),
-                         'penalty': (6,10)},
                 'gpr': {'alpha': (1e-11,1e-7,'log-uniform')},
                 'ann': {'hidden_layer_sizes': (2,200,'log-uniform'),
                         'activation': Categorical(['tanh', 'relu', 'logistic']),
                         'solver': Categorical(['lbfgs', 'sgd'])},
                 'rf': {'n_estimators': (10,300, 'log-uniform')}}
-    for m in ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']:
+    for m in ['lr', 'pr', 'gpr', 'ann', 'rf']:
         assert m in sm.models.keys()
         assert m in sm.hyper_parameters.keys()
         assert sm.hyper_parameters[m] == given_hp[m]
@@ -138,7 +136,6 @@ def test_initialize_models():
     models = model.models
     assert 'lr' in models
     assert 'pr' in models
-    assert 'mars' in models
     assert 'gpr' in models
     assert 'ann' in models
     assert 'rf' in models
@@ -158,14 +155,6 @@ def test_poly_model():
     assert poly_model['fit'] != None
     assert poly_model['score'] == -0.22259110245070493
     assert poly_model['mse_score'] == 1.2225911024507052
-
-def test_mars_models():
-    model.set_model('mars')
-    mars_model = model.models['mars']
-    assert mars_model['model'] != None
-    assert mars_model['fit'] != None
-    assert mars_model['score'] == 0.35460582006877317
-    assert mars_model['mse_score'] == 0.6453941799312267
 
 def test_grp_model():
     model.set_model('gpr')
@@ -245,9 +234,9 @@ def test_update_all_models():
     model2.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
     model2._initialize_models()
 
-    model_list = ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']
-    model_scores = [0.3546058200687729, -0.2225911024507033, 0.35460582006877317, 0.0, -0.8124181759959282, 0.1770111582876811, ]
-    model_scores2 = [-0.5475314374931772, -0.2225911024507033, -0.5475314374931768, 0.0, -1.0503029979397898, 0.033954767107108486, ]
+    model_list = ['lr', 'pr', 'gpr', 'ann', 'rf']
+    model_scores = [0.3546058200687729, -0.2225911024507033, 0.0, -0.8124181759959282, 0.1770111582876811, ]
+    model_scores2 = [-0.5475314374931772, -0.2225911024507033,  0.0, -1.0503029979397898, 0.033954767107108486, ]
     for model_type in model_list:
         model2.set_model(model_type)
     for model_type, model_score in zip(model_list, model_scores):
@@ -306,12 +295,12 @@ def test_return_best_model():
     sm.random = 57757
     sm.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
     sm._initialize_models()
-    model_list = ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']
+    model_list = ['lr', 'pr', 'gpr', 'ann', 'rf']
     for model_type in model_list:
         sm.set_model(model_type)
         print(model_type, sm.models[model_type]['score'])
     best_model = sm.return_best_model()
-    assert best_model == 'mars'
+    assert best_model == 'lr'
 
 def test_predict():
     sm = tm.Surrogate_Models()
@@ -329,8 +318,8 @@ def test_mse():
     sm.random = 57757
     sm.update_database(np.ndarray.tolist(variables), np.ndarray.tolist(objectives))
     sm._initialize_models()
-    model_list = ['lr', 'pr', 'mars', 'gpr', 'ann', 'rf']
-    mse_val = [0.6453941799312272, 1.2225911024507052, 0.6453941799312267, 1.0, 1.8124181759959297, 0.822988841712319]
+    model_list = ['lr', 'pr',  'gpr', 'ann', 'rf']
+    mse_val = [0.6453941799312272, 1.2225911024507052, 1.0, 1.8124181759959297, 0.822988841712319]
     for known_mse, model_type in zip(mse_val, model_list):
         sm.set_model(model_type)
         assert sm._get_mse(sm.models[model_type]['model']) == known_mse

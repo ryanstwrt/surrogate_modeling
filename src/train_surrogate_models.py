@@ -1,5 +1,3 @@
-import pyearth
-from pyearth import Earth
 import sklearn
 from sklearn import linear_model
 from sklearn import gaussian_process
@@ -47,8 +45,6 @@ class Surrogate_Models(object):
   def _initialize_hyper_parameters(self):
       self.hyper_parameters['lr'] = None
       self.hyper_parameters['pr'] = {'poly__degree': (1,5)}
-      self.hyper_parameters['mars'] = {'endspan_alpha': (0.001, 0.1),
-                                       'penalty': (6,10)}
       self.hyper_parameters['gpr'] = {'alpha': (1e-11,1e-7,'log-uniform')}
       self.hyper_parameters['ann'] = {'hidden_layer_sizes': (2,200,'log-uniform'),
                                       'activation': Categorical(['tanh', 'relu', 'logistic']),
@@ -59,7 +55,6 @@ class Surrogate_Models(object):
       self.models['lr']   = {'model': linear_model.LinearRegression()}
       self.models['pr']   = {'model': Pipeline([('poly', PolynomialFeatures()),
                                                 ('linear', linear_model.LinearRegression(fit_intercept=False))])}
-      self.models['mars'] = {'model': Earth()}
       self.models['gpr']  = {'model': gaussian_process.GaussianProcessRegressor(kernel=kernels.Matern(),optimizer='fmin_l_bfgs_b')}
       self.models['ann']  = {'model': neural_network.MLPRegressor(random_state=self.random, solver='lbfgs', activation='logistic')}
       self.models['rf']   = {'model': ensemble.RandomForestRegressor(random_state=self.random)}
@@ -91,7 +86,6 @@ class Surrogate_Models(object):
     predict = [model.predict([val])[0] for val in self.scaled_var_test]
     known = self.scaled_obj_test
     return mean_squared_error(known, predict)
-
 
   def add_model(self, model_type, model):
       """Add a new model which is not pre-defined"""
@@ -143,13 +137,7 @@ class Surrogate_Models(object):
             best_model = k
     return best_model
 
-  def predict(self, model_type, var):
-      """Return the value for a prediction using the trained set"""
-      scaled_var = self.var_train_scaler.transform(var)
-      model = self.models[model_type]['fit']
-      predictor = model.predict(scaled_var)
-      inv_pred = self.obj_train_scaler.inverse_transform(predictor)
-      return inv_pred
+
 
   def plot_validation_curve(self, model_type, hyper_parameter, hp_range):
       """Plot the validation curve for a model_type, given a particular hyper-parameter"""
@@ -213,7 +201,33 @@ class Surrogate_Models(object):
         self.obj_var.append(obj)
     self._split_database()
     self._scale_data_sets()
+    
+  def update_database_dict(self, database, ind_var_names, dep_var_names):
+    """
+    asdr
+    """
+    self.ind_var_names = ind_var_names
+    self.dep_var_names = dep_var_names
+    
+    for design in database.values():
+        self.ind_var.append([design['independent variables'][x] for x in ind_var_names])
+        self.obj_var.append([design['dependent variables'][x] for x in dep_var_names])
+    self._split_database()
+    self._scale_data_sets()    
 
+
+  def predict(self, model_type, design, output='list'):
+      """Return the value for a prediction using the trained set"""
+
+      design = [[design[var] for var in self.ind_var_names]] if type(design) == dict else design
+      scaled_var = self.var_train_scaler.transform(design)
+      model = self.models[model_type]['fit']
+      predictor = model.predict(scaled_var)
+      inv_pred = self.obj_train_scaler.inverse_transform(predictor)
+      obj = {name: inv_pred[0][num] for num, name in enumerate(self.dep_var_names)} if output == 'dict' else inv_pred  
+      
+      return obj   
+    
   def update_model(self, model_type):
     """update a single model with new data"""
     self.set_model(model_type)
